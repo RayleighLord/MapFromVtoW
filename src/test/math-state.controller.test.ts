@@ -15,7 +15,7 @@ import {
 const r = rational;
 
 describe("AppController", () => {
-  it("starts with the default shear map, vector, and tightly shared bounds", () => {
+  it("starts with the default shear map, vector, and fixed shared bounds", () => {
     const controller = new AppController();
     const view = controller.getViewModel();
 
@@ -35,10 +35,10 @@ describe("AppController", () => {
       matrix2([r(1n, 2n), r(3n, 2n)], [r(-1n, 2n), r(-1n, 2n)]),
     );
     expect(view.state.bounds).toEqual({
-      xMin: -5,
-      xMax: 5,
-      yMin: -5,
-      yMax: 5,
+      xMin: -6,
+      xMax: 6,
+      yMin: -6,
+      yMax: 6,
     });
   });
 
@@ -216,10 +216,53 @@ describe("AppController", () => {
     expect(recovered.state.focus).toBe("image-e2");
   });
 
-  it("automatically recomputes tight symmetric bounds after vector changes", () => {
+  it("preserves shared bounds across updates and fits only on request", () => {
     const controller = new AppController();
-    const expanded = controller.setSelectedVector(integerVector2(20n, -3n));
+    const initialBounds = controller.getState().bounds;
 
+    expect(
+      controller.updateMap(matrix2([r(10n), r(0n)], [r(0n), r(10n)])).state
+        .bounds,
+    ).toEqual(initialBounds);
+    expect(
+      controller.updateBasisV({
+        first: integerVector2(20n, 0n),
+        second: integerVector2(0n, 20n),
+      }).state.bounds,
+    ).toEqual(initialBounds);
+    expect(
+      controller.updateBasisW({
+        first: integerVector2(30n, 1n),
+        second: integerVector2(-1n, 30n),
+      }).state.bounds,
+    ).toEqual(initialBounds);
+    expect(
+      controller.setSelectedVector(integerVector2(40n, -3n)).state.bounds,
+    ).toEqual(initialBounds);
+    expect(controller.setFocus("image-e1").state.bounds).toEqual(initialBounds);
+
+    const fitted = controller.fitView();
+    expect(fitted.state.bounds.xMax).toBeGreaterThan(400);
+    expect(fitted.state.bounds).toEqual({
+      xMin: -fitted.state.bounds.xMax,
+      xMax: fitted.state.bounds.xMax,
+      yMin: -fitted.state.bounds.xMax,
+      yMax: fitted.state.bounds.xMax,
+    });
+  });
+
+  it("explicit fitting can expand and later return to the minimum extent", () => {
+    const controller = new AppController();
+    const outside = controller.setSelectedVector(integerVector2(20n, -3n));
+
+    expect(outside.state.bounds).toEqual({
+      xMin: -6,
+      xMax: 6,
+      yMin: -6,
+      yMax: 6,
+    });
+
+    const expanded = controller.fitView();
     expect(expanded.state.bounds.xMax).toBeGreaterThan(20);
     expect(expanded.state.bounds).toEqual({
       xMin: -expanded.state.bounds.xMax,
@@ -228,18 +271,15 @@ describe("AppController", () => {
       yMax: expanded.state.bounds.xMax,
     });
 
-    const tightened = controller.setSelectedVector(integerVector2(1n, 1n));
+    const small = controller.setSelectedVector(integerVector2(0n, 0n));
+    expect(small.state.bounds).toEqual(expanded.state.bounds);
+
+    const tightened = controller.fitView();
     expect(tightened.state.bounds).toEqual({
-      xMin: -4,
-      xMax: 4,
-      yMin: -4,
-      yMax: 4,
-    });
-    expect(controller.fitView().state.bounds).toEqual({
-      xMin: -4,
-      xMax: 4,
-      yMin: -4,
-      yMax: 4,
+      xMin: -6,
+      xMax: 6,
+      yMin: -6,
+      yMax: 6,
     });
   });
 
@@ -257,8 +297,16 @@ describe("AppController", () => {
     expect(view.analysis.imageE1Coordinates).toEqual(
       vector2(r(-100n), r(100n)),
     );
-    expect(view.state.bounds.xMax).toBeGreaterThan(100);
-    expect(view.state.bounds.xMax).toBe(view.state.bounds.yMax);
+    expect(view.state.bounds).toEqual({
+      xMin: -6,
+      xMax: 6,
+      yMin: -6,
+      yMax: 6,
+    });
+
+    const fitted = controller.fitView();
+    expect(fitted.state.bounds.xMax).toBeGreaterThan(100);
+    expect(fitted.state.bounds.xMax).toBe(fitted.state.bounds.yMax);
   });
 
   it("includes chosen B_V endpoints and its source-decomposition elbow", () => {
@@ -274,8 +322,16 @@ describe("AppController", () => {
     expect(view.vector?.sourceCoordinates).toEqual(
       vector2(r(-100n), r(100n)),
     );
-    expect(view.state.bounds.xMax).toBeGreaterThan(100);
-    expect(view.state.bounds.xMax).toBe(view.state.bounds.yMax);
+    expect(view.state.bounds).toEqual({
+      xMin: -6,
+      xMax: 6,
+      yMin: -6,
+      yMax: 6,
+    });
+
+    const fitted = controller.fitView();
+    expect(fitted.state.bounds.xMax).toBeGreaterThan(100);
+    expect(fitted.state.bounds.xMax).toBe(fitted.state.bounds.yMax);
   });
 
   it("snaps finite plot clicks to exact integer coordinates", () => {

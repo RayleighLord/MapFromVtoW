@@ -124,6 +124,30 @@ describe("plot coordinate geometry", () => {
     ).toBe(true);
   });
 
+  it("uses every integer as a major line in the default -6 to 6 view", () => {
+    const denseGrid = denseGridTicks(-6, 6);
+    const majorValues = denseGrid
+      .filter((tick) => tick.kind === "major")
+      .map((tick) => tick.value);
+
+    expect(majorValues).toEqual([
+      -6,
+      -5,
+      -4,
+      -3,
+      -2,
+      -1,
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+    ]);
+    expect(denseGrid).toContainEqual({ value: 0.25, kind: "minor" });
+  });
+
   it("clips off-screen vector segments without non-finite coordinates", () => {
     const clipped = clipSegmentToBounds(
       { start: { x: -20, y: 2 }, end: { x: 20, y: 2 } },
@@ -271,7 +295,7 @@ describe("plot decomposition geometry", () => {
     expect(resolveSourceDecomposition(scene)).toBeNull();
   });
 
-  it("resolves only the requested focused decomposition", () => {
+  it("resolves each requested output decomposition and rejects unavailable coordinates", () => {
     const scene: WPlaneScene = {
       bounds: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },
       basis: { first: vector(1n, 1n), second: vector(-1n, 1n) },
@@ -285,17 +309,49 @@ describe("plot decomposition geometry", () => {
         "image-v": { x: rational(3n, 2n), y: rational(-1n, 2n) },
       },
     };
-    const focused = resolveFocusedDecomposition(scene);
-    expect(focused?.key).toBe("image-e1");
-    expect(focused?.path.elbow).toEqual({ x: 0.5, y: 0.5 });
-    expect(focused?.path.end).toEqual({ x: 1, y: 0 });
+    const cases = [
+      {
+        focus: "image-e1",
+        elbow: { x: 0.5, y: 0.5 },
+        end: { x: 1, y: 0 },
+      },
+      {
+        focus: "image-e2",
+        elbow: { x: 0.5, y: 0.5 },
+        end: { x: 0, y: 1 },
+      },
+      {
+        focus: "image-v",
+        elbow: { x: 1.5, y: 1.5 },
+        end: { x: 2, y: 1 },
+      },
+    ] as const;
 
-    scene.coordinates["image-e1"] = null;
-    expect(resolveFocusedDecomposition(scene)).toBeNull();
+    for (const focusCase of cases) {
+      scene.focus = focusCase.focus;
+      const focused = resolveFocusedDecomposition(scene);
+      expect(focused?.key).toBe(focusCase.focus);
+      expect(focused?.path.elbow).toEqual(focusCase.elbow);
+      expect(focused?.path.end).toEqual(focusCase.end);
+
+      const coordinates = scene.coordinates[focusCase.focus];
+      scene.coordinates[focusCase.focus] = null;
+      expect(resolveFocusedDecomposition(scene)).toBeNull();
+      scene.coordinates[focusCase.focus] = coordinates;
+    }
   });
 });
 
 describe("plot fitting and finite conversion", () => {
+  it("uses the fixed [-6, 6] view as the minimum fitted extent", () => {
+    expect(fitSymmetricBounds([])).toEqual({
+      xMin: -6,
+      xMax: 6,
+      yMin: -6,
+      yMax: 6,
+    });
+  });
+
   it("fits all linked source/output endpoints and focused elbows", () => {
     const sourceScene: VPlaneScene = {
       bounds: { xMin: -8, xMax: 8, yMin: -8, yMax: 8 },

@@ -573,8 +573,9 @@ input[aria-invalid="true"] { border-color: var(--error); box-shadow: 0 0 0 3px c
   position: relative;
   z-index: 4;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 0.65rem;
   min-height: 4rem;
   padding: 0.72rem 0.9rem;
@@ -584,6 +585,65 @@ input[aria-invalid="true"] { border-color: var(--error); box-shadow: 0 0 0 3px c
 
 .space-heading h2 { font-size: 1rem; }
 .space-heading .katex { font-size: 1.08em; }
+
+.space-heading-actions {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.48rem;
+  max-width: 100%;
+  margin-left: auto;
+}
+
+.decomposition-focus-control {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+  min-width: 0;
+}
+
+.decomposition-focus-label {
+  color: var(--muted-ink);
+  font-size: 0.67rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.decomposition-focus-options {
+  grid-template-columns: repeat(3, max-content);
+  flex: 0 0 auto;
+  padding: 0.12rem;
+  border-radius: 12px;
+}
+
+.decomposition-focus-options button {
+  min-width: 2.8rem;
+  min-height: 2.1rem;
+  padding: 0.28rem 0.42rem;
+  border-radius: 9px;
+  font-size: 0.75rem;
+}
+
+.decomposition-focus-options .focus-image-e1 { color: var(--standard-first-label); }
+.decomposition-focus-options .focus-image-e2 { color: var(--standard-second-label); }
+.decomposition-focus-options .focus-image-v { color: var(--page-ink); }
+
+.decomposition-focus-options .focus-image-e1[aria-pressed="true"] {
+  box-shadow: inset 0 -2px 0 var(--standard-first), 0 3px 8px var(--shadow-soft);
+}
+
+.decomposition-focus-options .focus-image-e2[aria-pressed="true"] {
+  box-shadow: inset 0 -2px 0 var(--standard-second), 0 3px 8px var(--shadow-soft);
+}
+
+.fit-view-button {
+  flex: 0 0 auto;
+  min-height: 2.25rem;
+  padding: 0.42rem 0.72rem;
+  white-space: nowrap;
+  font-size: 0.72rem;
+}
 
 .plot-stage {
   position: relative;
@@ -686,6 +746,10 @@ input[aria-invalid="true"] { border-color: var(--error); box-shadow: 0 0 0 3px c
   .space-panel { min-height: 36rem; }
 }
 
+@media (min-width: 760px) and (max-width: 1050px) {
+  .space-heading { min-height: 6.85rem; }
+}
+
 @media (max-width: 759px) {
   .control-panel { grid-template-columns: 1fr; padding: 0.45rem 0.45rem 4.3rem; }
   .app-header { grid-column: auto; }
@@ -731,6 +795,10 @@ input[aria-invalid="true"] { border-color: var(--error); box-shadow: 0 0 0 3px c
   .vector-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .section-heading { align-items: flex-start; }
   .matrix-column small { font-size: 0.52rem; }
+  .decomposition-focus-label { display: none; }
+  .space-heading-actions { width: 100%; justify-content: space-between; }
+  .decomposition-focus-options button { min-width: 2.55rem; padding-inline: 0.34rem; }
+  .fit-view-button { padding-inline: 0.58rem; }
 }
 
 @media (max-height: 720px) and (min-width: 1180px) {

@@ -17,6 +17,11 @@ const requestedChromePath = process.env.CHROME_PATH;
 const systemChromePath = "/usr/bin/google-chrome";
 const executablePath =
   requestedChromePath ?? (existsSync(systemChromePath) ? systemChromePath : undefined);
+const focusButtonSelectors = {
+  "image-v": "#focus-image-v",
+  "image-e1": "#focus-image-e1",
+  "image-e2": "#focus-image-e2"
+};
 
 await mkdir(artifactDir, { recursive: true });
 
@@ -56,6 +61,7 @@ try {
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   await assertInitialRender(page);
   await assertThemePersistence(page);
+  await assertFocusSwitching(page);
   await assertMapAndVectorForms(page);
   await assertSingularBasisAndRecovery(page);
   await assertSourceBasisWorkflow(page);
@@ -115,6 +121,10 @@ async function assertInitialRender(page) {
     "#update-basis-button",
     "#set-vector-button",
     "#clear-vector-button",
+    "#fit-view-button",
+    "#focus-image-v",
+    "#focus-image-e1",
+    "#focus-image-e2",
     "#theme-toggle"
   ]) {
     await assertUniqueVisible(page, selector);
@@ -122,9 +132,6 @@ async function assertInitialRender(page) {
 
   for (const removedSelector of [
     ".results-card",
-    "#focus-image-e1",
-    "#focus-image-e2",
-    "#focus-image-v",
     "#decomposition-image-e1",
     "#decomposition-image-e2",
     "#decomposition-image-v",
@@ -133,8 +140,7 @@ async function assertInitialRender(page) {
     "#vector-identity",
     ".eyebrow",
     ".plot-help",
-    ".space-badge",
-    "#fit-view-button"
+    ".space-badge"
   ]) {
     assert.equal(await page.locator(removedSelector).count(), 0, `${removedSelector} was removed.`);
   }
@@ -154,6 +160,8 @@ async function assertInitialRender(page) {
   await assertPlotLabelPills(page, "dark");
   await assertArrowLineStyles(page);
   await assertSelectedVectorPaintOrder(page);
+  await assertFocusControls(page, "image-v");
+  await assertFocusedDecomposition(page, "image-v");
   assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
 
   const vPlot = page.locator("#v-plot");
@@ -161,7 +169,7 @@ async function assertInitialRender(page) {
   assert.ok((await vPlot.locator("line, path, circle, polyline, polygon").count()) > 0);
   assert.ok((await wPlot.locator("line, path, circle, polyline, polygon").count()) > 0);
   await assertSharedPlotContract(page);
-  assert.equal(await vPlot.getAttribute("data-bounds"), "-5,5,-5,5");
+  assert.equal(await vPlot.getAttribute("data-bounds"), "-6,6,-6,6");
   assert.equal(
     await page.locator("#v-plot [data-tick-axis], #w-plot [data-tick-axis]").count(),
     0,
@@ -379,6 +387,71 @@ async function assertSelectedVectorPaintOrder(page) {
   }
 }
 
+async function assertFocusSwitching(page) {
+  for (const focus of ["image-e1", "image-e2", "image-v"]) {
+    await page.locator(focusButtonSelectors[focus]).click();
+    await assertFocusControls(page, focus);
+    await assertFocusedDecomposition(page, focus);
+  }
+}
+
+async function assertFocusControls(page, selectedFocus, disabledFocuses = []) {
+  for (const [focus, selector] of Object.entries(focusButtonSelectors)) {
+    const button = page.locator(selector);
+    assert.equal(
+      await button.getAttribute("aria-pressed"),
+      String(focus === selectedFocus),
+      `${selector} must ${focus === selectedFocus ? "identify" : "not identify"} the active decomposition.`
+    );
+    assert.equal(
+      await button.isDisabled(),
+      disabledFocuses.includes(focus),
+      `${selector} has the wrong enabled state.`
+    );
+  }
+}
+
+async function assertFocusedDecomposition(page, focus) {
+  const plot = page.locator("#w-plot");
+  assert.equal(await plot.getAttribute("data-focus"), focus);
+  assert.equal(await plot.getAttribute("data-has-decomposition"), "true");
+  assert.equal(
+    await plot.locator('[data-arrow="decomposition-w1"]').count(),
+    1,
+    "Exactly one w₁ component must be plotted."
+  );
+  assert.equal(
+    await plot.locator('[data-arrow="decomposition-w2"]').count(),
+    1,
+    "Exactly one w₂ component must be plotted."
+  );
+
+  const endpointDifference = await plot.evaluate((svg, targetName) => {
+    const component = svg.querySelector('[data-arrow="decomposition-w2"] line');
+    const target = svg.querySelector(`[data-arrow="${targetName}"] line`);
+    if (!(component instanceof SVGLineElement) || !(target instanceof SVGLineElement)) {
+      return null;
+    }
+    return {
+      x: Math.abs(Number(component.getAttribute("x2")) - Number(target.getAttribute("x2"))),
+      y: Math.abs(Number(component.getAttribute("y2")) - Number(target.getAttribute("y2")))
+    };
+  }, focus);
+  assert.ok(endpointDifference, `The ${focus} target and its decomposition must both have endpoints.`);
+  assert.ok(
+    endpointDifference.x <= 1e-6 && endpointDifference.y <= 1e-6,
+    `The focused decomposition must terminate at ${focus}; endpoint difference was (${endpointDifference.x}, ${endpointDifference.y}).`
+  );
+}
+
+async function assertUnavailableDecomposition(page, focus) {
+  const plot = page.locator("#w-plot");
+  assert.equal(await plot.getAttribute("data-focus"), focus);
+  assert.equal(await plot.getAttribute("data-has-decomposition"), "false");
+  assert.equal(await plot.locator('[data-arrow="decomposition-w1"]').count(), 0);
+  assert.equal(await plot.locator('[data-arrow="decomposition-w2"]').count(), 0);
+}
+
 async function assertBasisHeadingBraces(page) {
   for (const [selector, basisName] of [
     ["#v-space-heading", "B_V"],
@@ -575,11 +648,15 @@ async function assertMapAndVectorForms(page) {
   await page.locator("#clear-vector-button").click();
   assert.equal(await page.locator('#v-plot [data-arrow="source-v"]').count(), 0);
   assert.equal(await page.locator('#w-plot [data-arrow="image-v"]').count(), 0);
+  await assertFocusControls(page, "image-e1", ["image-v"]);
+  await assertFocusedDecomposition(page, "image-e1");
 
   const clearedVPlot = await plotSignature(page, "#v-plot");
   await setVector(page, "3/2", "-2");
   assert.notEqual(await plotSignature(page, "#v-plot"), clearedVPlot);
   assert.equal(await page.locator('#w-plot [data-arrow="image-v"]').count(), 1);
+  await assertFocusControls(page, "image-v");
+  await assertFocusedDecomposition(page, "image-v");
 
   const previousVPlot = await plotSignature(page, "#v-plot");
   await page.locator("#vector-x").fill("1e2");
@@ -639,9 +716,22 @@ async function assertClickSnapsWithoutHoverPreview(page) {
 }
 
 async function assertSingularBasisAndRecovery(page) {
+  await page.locator("#focus-image-e2").click();
+  await assertFocusControls(page, "image-e2");
+  await assertFocusedDecomposition(page, "image-e2");
+
   const imageBeforeBasisChange = await imageGeometrySignature(page);
   await setBasis(page, ["1", "1", "2", "2"]);
   assert.match(normalizeText(await page.locator("#basis-status").textContent()), /not a basis/i);
+  await assertFocusControls(page, "image-e2", ["image-v", "image-e1", "image-e2"]);
+  await assertUnavailableDecomposition(page, "image-e2");
+  for (const image of ["image-e1", "image-e2", "image-v"]) {
+    assert.equal(
+      await page.locator(`#w-plot [data-arrow="${image}"]`).count(),
+      1,
+      `${image} must remain plotted as an ambient vector for a singular B_W.`
+    );
+  }
 
   const unavailableText = normalizeText(await page.locator("#representation-matrix").textContent());
   assert.match(unavailableText, /(unavailable|does not exist|not a basis)/i);
@@ -654,6 +744,12 @@ async function assertSingularBasisAndRecovery(page) {
   await setBasis(page, ["1", "1", "-1", "1"]);
   assert.match(normalizeText(await page.locator("#basis-status").textContent()), /valid basis/i);
   await assertDefaultRepresentation(page);
+  await assertFocusControls(page, "image-e2");
+  await assertFocusedDecomposition(page, "image-e2");
+
+  await page.locator("#focus-image-v").click();
+  await assertFocusControls(page, "image-v");
+  await assertFocusedDecomposition(page, "image-v");
 }
 
 async function assertSourceBasisWorkflow(page) {
@@ -711,19 +807,74 @@ async function assertSourceBasisWorkflow(page) {
 }
 
 async function assertFitView(page) {
-  await setVector(page, "24", "-17");
+  const initialBounds = "-6,6,-6,6";
+  assert.equal(
+    await page.locator("#v-plot").getAttribute("data-bounds"),
+    initialBounds,
+    "The plots must begin with the fixed [-6, 6] by [-6, 6] view."
+  );
+
+  await setVector(page, "3", "3");
   await assertSharedPlotContract(page);
-  const expandedBounds = await page.locator("#v-plot").getAttribute("data-bounds");
-  assert.notEqual(expandedBounds, "-5,5,-5,5");
+  assert.equal(
+    await page.locator("#v-plot").getAttribute("data-bounds"),
+    initialBounds,
+    "Entering an off-screen vector must not fit either plot automatically."
+  );
+  assert.equal(
+    await page.locator("#w-plot").getAttribute("data-bounds"),
+    initialBounds,
+    "The linked W view must remain fixed until Fit view is requested."
+  );
+  assert.equal(
+    await arrowEndpointIsInsidePlot(page, "#v-plot", "source-v"),
+    true,
+    "v = (3, 3) must remain visible in the fixed V view."
+  );
+  assert.equal(
+    await arrowEndpointIsInsidePlot(page, "#w-plot", "image-v"),
+    false,
+    "f(v) = (9, 3) must remain outside the fixed W view before fitting."
+  );
+
+  await page.locator("#fit-view-button").click();
+  await assertSharedPlotContract(page);
+  const fittedBounds = await page.locator("#v-plot").getAttribute("data-bounds");
+  assert.notEqual(fittedBounds, initialBounds, "Fit view must expand the shared bounds.");
+  assert.equal(
+    await arrowEndpointIsInsidePlot(page, "#v-plot", "source-v"),
+    true,
+    "Fit view must reveal the source-vector endpoint."
+  );
+  assert.equal(
+    await arrowEndpointIsInsidePlot(page, "#w-plot", "image-v"),
+    true,
+    "Fit view must reveal the image-vector endpoint."
+  );
 
   await setVector(page, "2", "1");
   assert.equal(
     await page.locator("#v-plot").getAttribute("data-bounds"),
-    "-5,5,-5,5",
-    "Automatic fitting must return to the tight shared default view."
+    fittedBounds,
+    "Subsequent vector edits must preserve the manually fitted view."
   );
   await assertSharedPlotContract(page);
-  assert.equal(await page.locator("#fit-view-button").count(), 0);
+
+  await page.locator("#fit-view-button").click();
+  await assertSharedPlotContract(page);
+  assert.equal(
+    await page.locator("#v-plot").getAttribute("data-bounds"),
+    initialBounds,
+    "Fitting the default vectors must return to the minimum [-6, 6] shared view."
+  );
+}
+
+async function arrowEndpointIsInsidePlot(page, plotSelector, arrowName) {
+  // Arrow lines are clipped to the viewport, while endpoint labels are only
+  // created when the raw mathematical endpoint lies inside the plot bounds.
+  return (await page.locator(
+    `${plotSelector} [data-label="${arrowName}-label"]`
+  ).count()) === 1;
 }
 
 async function assertResponsiveLayout(page) {
@@ -860,7 +1011,10 @@ async function assertResponsiveLayout(page) {
     } else if (viewport.mode === "tablet") {
       assert.ok(layout.mapForm.y < layout.vPlot.y, "Tablet controls must move above the plots.");
       assert.ok(layout.vPlot.x < layout.wPlot.x, "Tablet plots must remain side by side.");
-      assert.ok(Math.abs(layout.vPlot.y - layout.wPlot.y) <= 6);
+      assert.ok(
+        Math.abs(layout.vPlot.y - layout.wPlot.y) <= 6,
+        `Tablet plot tops must stay aligned; measured ${Math.abs(layout.vPlot.y - layout.wPlot.y)}px.`
+      );
     } else {
       assert.ok(layout.mapForm.y < layout.vPlot.y, "Mobile controls must precede the plots.");
       assert.ok(layout.vPlot.y < layout.wPlot.y, "Mobile plots must stack V above W.");
@@ -924,7 +1078,7 @@ async function arrowGeometrySignature(page, names) {
           const y1 = Number(line.getAttribute("y1"));
           const x2 = Number(line.getAttribute("x2"));
           const y2 = Number(line.getAttribute("y2"));
-          // Normalize arrow deltas by the automatically fitted extent. This
+          // Normalize arrow deltas by the current shared extent. This
           // compares ambient vectors even when another endpoint changes the
           // shared plot scale. Querying from the live SVG in one evaluation
           // also avoids retaining groups detached by a ResizeObserver frame.
@@ -976,6 +1130,7 @@ async function restoreDefaults(page) {
   await setSourceBasis(page, ["1", "0", "0", "1"]);
   await setBasis(page, ["1", "1", "-1", "1"]);
   await setVector(page, "2", "1");
+  await page.locator("#fit-view-button").click();
   if ((await page.locator("html").getAttribute("data-theme")) !== "dark") {
     await page.locator("#theme-toggle").click();
   }

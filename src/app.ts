@@ -13,6 +13,7 @@ import {
   wPlaneSceneFromViewModel,
 } from "./plot";
 import type {
+  DecompositionFocus,
   Matrix2,
   Rational,
   Vector2,
@@ -25,6 +26,12 @@ type Theme = "dark" | "light";
 interface FieldTarget {
   input: HTMLInputElement;
   error: HTMLElement;
+}
+
+interface DecompositionFocusTarget {
+  focus: DecompositionFocus;
+  button: HTMLButtonElement;
+  announcement: string;
 }
 
 const THEME_STORAGE_KEY = "map-from-v-to-w-theme";
@@ -106,6 +113,30 @@ export function startApp(): void {
   }
 
   const controller = new AppController();
+  const decompositionFocusTargets: readonly DecompositionFocusTarget[] = [
+    {
+      focus: "image-v",
+      button: getElement<HTMLButtonElement>("focus-image-v"),
+      announcement: "Showing the decomposition of f of v in the output basis.",
+    },
+    {
+      focus: "image-e1",
+      button: getElement<HTMLButtonElement>("focus-image-e1"),
+      announcement: "Showing the decomposition of f of e one in the output basis.",
+    },
+    {
+      focus: "image-e2",
+      button: getElement<HTMLButtonElement>("focus-image-e2"),
+      announcement: "Showing the decomposition of f of e two in the output basis.",
+    },
+  ];
+  for (const target of decompositionFocusTargets) {
+    target.button.addEventListener("click", () => {
+      controller.setFocus(target.focus);
+      announce(interactionStatus, target.announcement);
+    });
+  }
+
   const vPlot = new VPlanePlot(getElement<SVGSVGElement>("v-plot"), {
     onSelect: ({ x, y }) => {
       const vector = snapVectorToInteger(x, y);
@@ -215,7 +246,7 @@ export function startApp(): void {
     clearAllFieldErrors(Object.values(vectorFields));
     vectorFormError.textContent = "";
     controller.clearSelectedVector();
-    announce(interactionStatus, "Input vector cleared. The first matrix column is now focused.");
+    announce(interactionStatus, "Input vector cleared. The decomposition of f of e one is now shown.");
   });
 
   getElement<SVGSVGElement>("v-plot").addEventListener("contextmenu", (event) => {
@@ -224,6 +255,11 @@ export function startApp(): void {
     vectorFields.y.input.value = "";
     controller.clearSelectedVector();
     announce(interactionStatus, "Input vector cleared.");
+  });
+
+  getElement<HTMLButtonElement>("fit-view-button").addEventListener("click", () => {
+    controller.fitView();
+    announce(interactionStatus, "Both plots fitted to the displayed vectors.");
   });
 
   controller.subscribe((viewModel) => {
@@ -239,9 +275,25 @@ export function startApp(): void {
       viewModel.analysis.inverseBasis !== null,
     );
     renderResults(viewModel);
+    renderDecompositionFocus(viewModel, decompositionFocusTargets);
     vPlot.render(vPlaneSceneFromViewModel(viewModel));
     wPlot.render(wPlaneSceneFromViewModel(viewModel));
   });
+}
+
+function renderDecompositionFocus(
+  viewModel: ViewModel,
+  targets: readonly DecompositionFocusTarget[],
+): void {
+  const outputBasisIsValid = viewModel.analysis.inverseBasis !== null;
+  for (const target of targets) {
+    const isSelected = target.focus === viewModel.state.focus;
+    const isAvailable =
+      outputBasisIsValid &&
+      (target.focus !== "image-v" || viewModel.state.selectedVector !== null);
+    target.button.setAttribute("aria-pressed", String(isSelected));
+    target.button.disabled = !isAvailable;
+  }
 }
 
 function configureTheme(status: HTMLElement): void {

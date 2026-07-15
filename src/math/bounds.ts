@@ -8,7 +8,7 @@ import type {
 import { MAX_FINITE_MAGNITUDE, rational, rationalToNumber } from "./rational";
 import { scaleVector2, vector2 } from "./vector";
 
-export const MIN_PLOT_EXTENT = 4;
+export const MIN_PLOT_EXTENT = 6;
 export const PLOT_PADDING_RATIO = 0.12;
 
 export const DEFAULT_PLOT_BOUNDS: PlotBounds = Object.freeze({

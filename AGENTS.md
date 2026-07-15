@@ -22,6 +22,11 @@ safely at a GitHub Pages repository subpath.
   Changing `B_V` changes `e1`, `e2`, and their images, but never the ambient vector `f(v)`.
 - Horizontal and vertical model units must render at the same pixel scale, and the two plots must
   share the same bounds.
+- Both plots start at `[-6, 6] x [-6, 6]`. Map, basis, focus, and vector updates preserve the
+  current view even when an endpoint goes off-screen; only the explicit `Fit view` action may
+  recompute the shared bounds.
+- In the initial view, major grid lines mark every integer from `-6` through `6`, with four minor
+  subdivisions per unit.
 
 ## Architecture
 
@@ -42,6 +47,8 @@ safely at a GitHub Pages repository subpath.
   plotted.
 - The `V` plot accepts integer-snapped vector selection; the `W` plot stays read-only because the
   map need not be invertible.
+- The `W` plot shows one output-basis decomposition at a time, selected from `f(v)`, `f(e1)`, and
+  `f(e2)`. Disable unavailable choices without removing their ambient image arrows.
 - Keep controls and both plots unobscured at desktop, tablet, and mobile breakpoints.
 - Preserve semantic forms, status announcements, keyboard submission, visible focus states,
   reduced-motion support, and KaTeX MathML output.

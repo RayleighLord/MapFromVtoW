@@ -90,18 +90,13 @@ function freezeState(state: AppState): AppState {
 }
 
 export function createDefaultAppState(): AppState {
-  const state = freezeState({
+  return freezeState({
     map: DEFAULT_MAP,
     basisV: DEFAULT_BASIS_V,
     basisW: DEFAULT_BASIS_W,
     selectedVector: DEFAULT_SELECTED_VECTOR,
     focus: "image-v",
     bounds: DEFAULT_PLOT_BOUNDS,
-  });
-
-  return freezeState({
-    ...state,
-    bounds: fitPlotBounds(deriveViewModel(state)),
   });
 }
 
@@ -199,12 +194,7 @@ export class AppController {
   private readonly listeners = new Set<AppControllerListener>();
 
   public constructor(initialState: AppState = createDefaultAppState()) {
-    const normalized = freezeState(initialState);
-    const initialViewModel = deriveViewModel(normalized);
-    this.state = freezeState({
-      ...normalized,
-      bounds: fitPlotBounds(initialViewModel),
-    });
+    this.state = freezeState(initialState);
   }
 
   public getState(): AppState {
@@ -301,19 +291,17 @@ export class AppController {
   }
 
   public fitView(): ViewModel {
-    return this.commit(this.state);
+    return this.commit({
+      ...this.state,
+      bounds: fitPlotBounds(this.getViewModel()),
+    });
   }
 
   private commit(candidateValue: AppState): ViewModel {
     // All normalization/analysis occurs before state is assigned. Any thrown
     // validation error leaves both state and subscribers untouched.
-    let candidate = freezeState(candidateValue);
-    let viewModel = deriveViewModel(candidate);
-    candidate = freezeState({
-      ...candidate,
-      bounds: fitPlotBounds(viewModel),
-    });
-    viewModel = deriveViewModel(candidate);
+    const candidate = freezeState(candidateValue);
+    const viewModel = deriveViewModel(candidate);
 
     this.state = candidate;
     for (const listener of this.listeners) {

@@ -259,6 +259,52 @@
                 <p>Output space</p>
                 <h2 id="w-space-heading"><span class="math-inline" data-math="W,\quad B_W=\{\vec w_1,\vec w_2\}"></span></h2>
               </div>
+              <div class="space-heading-actions">
+                <div
+                  class="decomposition-focus-control"
+                  role="group"
+                  aria-label="Choose the decomposition shown in W"
+                >
+                  <span class="decomposition-focus-label">Decompose</span>
+                  <div class="segmented-control decomposition-focus-options">
+                    <button
+                      id="focus-image-v"
+                      class="decomposition-focus-button focus-image-v"
+                      type="button"
+                      aria-label="Show the decomposition of f of v in basis B W"
+                      aria-pressed="true"
+                    >
+                      <span class="math-inline" data-math="f(\vec v)"></span>
+                    </button>
+                    <button
+                      id="focus-image-e1"
+                      class="decomposition-focus-button focus-image-e1"
+                      type="button"
+                      aria-label="Show the decomposition of f of e 1 in basis B W"
+                      aria-pressed="false"
+                    >
+                      <span class="math-inline" data-math="f(\vec e_1)"></span>
+                    </button>
+                    <button
+                      id="focus-image-e2"
+                      class="decomposition-focus-button focus-image-e2"
+                      type="button"
+                      aria-label="Show the decomposition of f of e 2 in basis B W"
+                      aria-pressed="false"
+                    >
+                      <span class="math-inline" data-math="f(\vec e_2)"></span>
+                    </button>
+                  </div>
+                </div>
+                <button
+                  id="fit-view-button"
+                  class="fit-view-button ghost-button"
+                  type="button"
+                  aria-label="Fit both plots to all vectors"
+                >
+                  Fit view
+                </button>
+              </div>
             </header>
             <div class="plot-stage" id="w-plot-stage">
               <svg id="w-plot" viewBox="0 0 720 720" role="img" aria-label="Images and their coordinates in W"></svg>

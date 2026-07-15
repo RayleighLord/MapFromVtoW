@@ -66,10 +66,10 @@ export interface GridTick {
 }
 
 export const DEFAULT_PLOT_BOUNDS: PlotBounds = {
-  xMin: -8,
-  xMax: 8,
-  yMin: -8,
-  yMax: 8,
+  xMin: -6,
+  xMax: 6,
+  yMin: -6,
+  yMax: 6,
 };
 
 /** Keeps symmetric ranges, padding, and SVG transforms comfortably finite. */
@@ -284,7 +284,7 @@ export function integerTicks(
 export function denseGridTicks(
   minimum: number,
   maximum: number,
-  targetMajorTickCount = 10,
+  targetMajorTickCount = 12,
   subdivisions = 4,
 ): GridTick[] {
   if (
@@ -474,7 +474,7 @@ export function fitSymmetricBounds(
   points: readonly Vector2<number>[],
   options: FitOptions = {},
 ): PlotBounds {
-  const minimumExtent = Math.max(0.000001, options.minimumExtent ?? 8);
+  const minimumExtent = Math.max(0.000001, options.minimumExtent ?? 6);
   const paddingRatio = Math.max(0, options.paddingRatio ?? 0.12);
   let maximumMagnitude = 0;
   for (const point of points) {
