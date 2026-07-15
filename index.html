@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Explore how a linear map carries vectors from a based space V into a differently based space W."
+    />
+    <link rel="icon" href="./logo.svg" type="image/svg+xml" />
+    <title>Map from V to W Explorer</title>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="control-panel" aria-label="Linear map controls and equations">
+        <header class="app-header">
+          <div>
+            <h1>Map <span class="math-inline" data-math="V\to W"></span></h1>
+          </div>
+        </header>
+
+        <form id="map-form" class="control-card map-card" novalidate>
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Linear function</p>
+              <h2><span class="math-inline" data-math="f(x,y)=(ax+by,cx+dy)"></span></h2>
+            </div>
+            <span id="map-status" class="status-chip is-ready">Applied</span>
+          </div>
+
+          <div class="formula-editor" aria-label="Coefficients of f">
+            <span class="formula-bracket" aria-hidden="true">(</span>
+            <div class="formula-rows">
+              <div class="formula-row">
+                <label class="coefficient-field">
+                  <span class="sr-only">Coefficient a</span>
+                  <input id="map-11" type="text" value="1" inputmode="decimal" maxlength="32" autocomplete="off" aria-describedby="map-11-error" />
+                  <span id="map-11-error" class="field-error"></span>
+                </label>
+                <span>x +</span>
+                <label class="coefficient-field">
+                  <span class="sr-only">Coefficient b</span>
+                  <input id="map-12" type="text" value="2" inputmode="decimal" maxlength="32" autocomplete="off" aria-describedby="map-12-error" />
+                  <span id="map-12-error" class="field-error"></span>
+                </label>
+                <span>y</span>
+              </div>
+              <div class="formula-row">
+                <label class="coefficient-field">
+                  <span class="sr-only">Coefficient c</span>
+                  <input id="map-21" type="text" value="0" inputmode="decimal" maxlength="32" autocomplete="off" aria-describedby="map-21-error" />
+                  <span id="map-21-error" class="field-error"></span>
+                </label>
+                <span>x +</span>
+                <label class="coefficient-field">
+                  <span class="sr-only">Coefficient d</span>
+                  <input id="map-22" type="text" value="1" inputmode="decimal" maxlength="32" autocomplete="off" aria-describedby="map-22-error" />
+                  <span id="map-22-error" class="field-error"></span>
+                </label>
+                <span>y</span>
+              </div>
+            </div>
+            <span class="formula-bracket" aria-hidden="true">)</span>
+          </div>
+          <div class="card-actions">
+            <p id="map-form-error" class="form-error" aria-live="polite"></p>
+            <button id="apply-map-button" class="primary-button" type="submit">Apply map</button>
+          </div>
+        </form>
+
+        <form id="source-basis-form" class="control-card source-basis-card" novalidate>
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Input basis</p>
+              <h2><span class="math-inline" data-math="B_V=\{\vec e_1,\vec e_2\}"></span></h2>
+            </div>
+            <span id="source-basis-status" class="status-chip is-valid">Valid basis</span>
+          </div>
+
+          <div class="basis-editor">
+            <fieldset class="vector-fieldset basis-e1">
+              <legend><span class="math-inline" data-math="\vec e_1"></span></legend>
+              <div class="column-vector-editor" aria-label="Coordinates of e 1 as a column vector">
+                <span class="column-vector-bracket" aria-hidden="true">[</span>
+                <div class="column-vector-fields">
+                  <label class="field">
+                    <span class="sr-only">x coordinate of e 1</span>
+                    <input id="source-basis-first-x" type="text" value="1" inputmode="decimal" maxlength="32" autocomplete="off" aria-label="x coordinate of e 1" aria-describedby="source-basis-first-x-error" />
+                    <span id="source-basis-first-x-error" class="field-error"></span>
+                  </label>
+                  <label class="field">
+                    <span class="sr-only">y coordinate of e 1</span>
+                    <input id="source-basis-first-y" type="text" value="0" inputmode="decimal" maxlength="32" autocomplete="off" aria-label="y coordinate of e 1" aria-describedby="source-basis-first-y-error" />
+                    <span id="source-basis-first-y-error" class="field-error"></span>
+                  </label>
+                </div>
+                <span class="column-vector-bracket" aria-hidden="true">]</span>
+              </div>
+            </fieldset>
+            <fieldset class="vector-fieldset basis-e2">
+              <legend><span class="math-inline" data-math="\vec e_2"></span></legend>
+              <div class="column-vector-editor" aria-label="Coordinates of e 2 as a column vector">
+                <span class="column-vector-bracket" aria-hidden="true">[</span>
+                <div class="column-vector-fields">
+                  <label class="field">
+                    <span class="sr-only">x coordinate of e 2</span>
+                    <input id="source-basis-second-x" type="text" value="0" inputmode="decimal" maxlength="32" autocomplete="off" aria-label="x coordinate of e 2" aria-describedby="source-basis-second-x-error" />
+                    <span id="source-basis-second-x-error" class="field-error"></span>
+                  </label>
+                  <label class="field">
+                    <span class="sr-only">y coordinate of e 2</span>
+                    <input id="source-basis-second-y" type="text" value="1" inputmode="decimal" maxlength="32" autocomplete="off" aria-label="y coordinate of e 2" aria-describedby="source-basis-second-y-error" />
+                    <span id="source-basis-second-y-error" class="field-error"></span>
+                  </label>
+                </div>
+                <span class="column-vector-bracket" aria-hidden="true">]</span>
+              </div>
+            </fieldset>
+          </div>
+          <div class="card-actions">
+            <p id="source-basis-form-error" class="form-error" aria-live="polite"></p>
+            <button id="update-source-basis-button" class="primary-button" type="submit">Update basis</button>
+          </div>
+        </form>
+
+        <form id="basis-form" class="control-card basis-card" novalidate>
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Output basis</p>
+              <h2><span class="math-inline" data-math="B_W=\{\vec w_1,\vec w_2\}"></span></h2>
+            </div>
+            <span id="basis-status" class="status-chip is-valid">Valid basis</span>
+          </div>
+
+          <div class="basis-editor">
+            <fieldset class="vector-fieldset basis-first">
+              <legend><span class="math-inline" data-math="\vec w_1"></span></legend>
+              <div class="column-vector-editor" aria-label="Coordinates of w 1 as a column vector">
+                <span class="column-vector-bracket" aria-hidden="true">[</span>
+                <div class="column-vector-fields">
+                  <label class="field">
+                    <span class="sr-only">x coordinate of w 1</span>
+                    <input id="basis-first-x" type="text" value="1" inputmode="decimal" maxlength="32" autocomplete="off" aria-label="x coordinate of w 1" aria-describedby="basis-first-x-error" />
+                    <span id="basis-first-x-error" class="field-error"></span>
+                  </label>
+                  <label class="field">
+                    <span class="sr-only">y coordinate of w 1</span>
+                    <input id="basis-first-y" type="text" value="1" inputmode="decimal" maxlength="32" autocomplete="off" aria-label="y coordinate of w 1" aria-describedby="basis-first-y-error" />
+                    <span id="basis-first-y-error" class="field-error"></span>
+                  </label>
+                </div>
+                <span class="column-vector-bracket" aria-hidden="true">]</span>
+              </div>
+            </fieldset>
+            <fieldset class="vector-fieldset basis-second">
+              <legend><span class="math-inline" data-math="\vec w_2"></span></legend>
+              <div class="column-vector-editor" aria-label="Coordinates of w 2 as a column vector">
+                <span class="column-vector-bracket" aria-hidden="true">[</span>
+                <div class="column-vector-fields">
+                  <label class="field">
+                    <span class="sr-only">x coordinate of w 2</span>
+                    <input id="basis-second-x" type="text" value="-1" inputmode="decimal" maxlength="32" autocomplete="off" aria-label="x coordinate of w 2" aria-describedby="basis-second-x-error" />
+                    <span id="basis-second-x-error" class="field-error"></span>
+                  </label>
+                  <label class="field">
+                    <span class="sr-only">y coordinate of w 2</span>
+                    <input id="basis-second-y" type="text" value="1" inputmode="decimal" maxlength="32" autocomplete="off" aria-label="y coordinate of w 2" aria-describedby="basis-second-y-error" />
+                    <span id="basis-second-y-error" class="field-error"></span>
+                  </label>
+                </div>
+                <span class="column-vector-bracket" aria-hidden="true">]</span>
+              </div>
+            </fieldset>
+          </div>
+          <div class="card-actions">
+            <p id="basis-form-error" class="form-error" aria-live="polite"></p>
+            <button id="update-basis-button" class="primary-button" type="submit">Update basis</button>
+          </div>
+        </form>
+
+        <form id="vector-form" class="control-card vector-card" novalidate>
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Input vector</p>
+              <h2><span class="math-inline" data-math="\vec v"></span></h2>
+            </div>
+          </div>
+          <div class="vector-input-layout">
+            <div class="column-vector-editor input-vector-column" aria-label="Coordinates of v as a column vector">
+              <span class="column-vector-bracket" aria-hidden="true">[</span>
+              <div class="column-vector-fields">
+                <label class="field">
+                  <span class="sr-only">First coordinate of v</span>
+                  <input id="vector-x" type="text" value="2" inputmode="decimal" maxlength="32" autocomplete="off" aria-label="First coordinate of v" aria-describedby="vector-x-error" />
+                  <span id="vector-x-error" class="field-error"></span>
+                </label>
+                <label class="field">
+                  <span class="sr-only">Second coordinate of v</span>
+                  <input id="vector-y" type="text" value="1" inputmode="decimal" maxlength="32" autocomplete="off" aria-label="Second coordinate of v" aria-describedby="vector-y-error" />
+                  <span id="vector-y-error" class="field-error"></span>
+                </label>
+              </div>
+              <span class="column-vector-bracket" aria-hidden="true">]</span>
+            </div>
+            <div class="vector-actions">
+              <button id="clear-vector-button" class="ghost-button" type="button">Clear</button>
+              <button id="set-vector-button" class="primary-button" type="submit">Set vector</button>
+            </div>
+          </div>
+          <p id="vector-form-error" class="form-error" aria-live="polite"></p>
+          <p class="field-hint">Click the plane <span class="math-inline" data-math="V"></span> to replace this vector.</p>
+        </form>
+
+        <p id="interaction-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+      </aside>
+
+      <button
+        id="theme-toggle"
+        class="theme-toggle"
+        type="button"
+        aria-pressed="true"
+        aria-label="Switch to light mode"
+      >
+        <span id="theme-toggle-icon" class="theme-toggle-icon" aria-hidden="true">☀</span>
+        <span id="theme-toggle-label">Light mode</span>
+      </button>
+
+      <main class="visualization" aria-label="Linear map visualization">
+        <section class="matrix-banner" aria-labelledby="matrix-heading">
+          <h2 id="matrix-heading" class="sr-only">Matrix A of f from basis B V to basis B W</h2>
+          <div id="representation-matrix" class="math-output matrix-output" aria-live="polite"></div>
+          <div class="matrix-component-equations" aria-label="Images of the input basis vectors as B W coordinate columns">
+            <div id="matrix-component-e1" class="matrix-component-equation"></div>
+            <div id="matrix-component-e2" class="matrix-component-equation"></div>
+          </div>
+          <p id="basis-warning" class="basis-warning" hidden></p>
+        </section>
+        <div class="plots-row">
+          <section class="space-panel space-v" aria-labelledby="v-space-heading">
+            <header class="space-heading">
+              <div>
+                <p>Input space</p>
+                <h2 id="v-space-heading"><span class="math-inline" data-math="V,\quad B_V=\{\vec e_1,\vec e_2\}"></span></h2>
+              </div>
+            </header>
+            <div class="plot-stage" id="v-plot-stage">
+              <svg id="v-plot" viewBox="0 0 720 720" role="img" aria-label="Input vector in V"></svg>
+            </div>
+          </section>
+
+          <div class="map-bridge" aria-hidden="true">
+            <span class="math-inline" data-math="f"></span>
+            <span class="bridge-arrow">→</span>
+          </div>
+
+          <section class="space-panel space-w" aria-labelledby="w-space-heading">
+            <header class="space-heading">
+              <div>
+                <p>Output space</p>
+                <h2 id="w-space-heading"><span class="math-inline" data-math="W,\quad B_W=\{\vec w_1,\vec w_2\}"></span></h2>
+              </div>
+            </header>
+            <div class="plot-stage" id="w-plot-stage">
+              <svg id="w-plot" viewBox="0 0 720 720" role="img" aria-label="Images and their coordinates in W"></svg>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
