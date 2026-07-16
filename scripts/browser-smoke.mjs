@@ -96,7 +96,7 @@ async function assertInitialRender(page) {
   await assertUniqueVisible(page, "#matrix-component-e2");
 
   const expectedInputs = {
-    "#map-11": "1",
+    "#map-11": "2",
     "#map-12": "2",
     "#map-21": "0",
     "#map-22": "1",
@@ -108,7 +108,7 @@ async function assertInitialRender(page) {
     "#basis-first-y": "1",
     "#basis-second-x": "-1",
     "#basis-second-y": "1",
-    "#vector-x": "2",
+    "#vector-x": "1",
     "#vector-y": "1"
   };
   for (const [selector, value] of Object.entries(expectedInputs)) {
@@ -154,11 +154,12 @@ async function assertInitialRender(page) {
   assert.match(normalizeText(await page.locator("#basis-status").textContent()), /valid basis/i);
   await assertDefaultRepresentation(page);
   await assertMatrixPresentation(page);
-  await assertMatrixComponentEquations(page, ["1/2,-1/2", "3/2,-1/2"]);
+  await assertMatrixComponentEquations(page, ["1,-1", "3/2,-1/2"]);
   await assertBasisHeadingBraces(page);
   await assertCoefficientLabelTex(page);
   await assertPlotLabelPills(page, "dark");
   await assertArrowLineStyles(page);
+  await assertArrowMarkerGeometry(page);
   await assertSelectedVectorPaintOrder(page);
   await assertFocusControls(page, "image-v");
   await assertFocusedDecomposition(page, "image-v");
@@ -195,7 +196,7 @@ async function assertDefaultRepresentation(page) {
     assert.deepEqual(
       matrixColumns(machineValue),
       [
-        ["1/2", "-1/2"],
+        ["1", "-1"],
         ["3/2", "-1/2"]
       ],
       "The default matrix columns must be the exact B_W coordinates of f(e_1) and f(e_2)."
@@ -208,7 +209,7 @@ async function assertDefaultRepresentation(page) {
     (await annotation.count()) > 0 ? await annotation.first().textContent() : await matrix.textContent()
   );
   assert.ok(source.length > 0, "The default representation matrix must be rendered.");
-  assert.match(source, /(?:\\frac\{1\}\{2\}|1\/2|0\.5)/);
+  assert.match(source, /(?:\\frac\{3\}\{2\}|3\/2|1\.5)/);
   assert.match(source, /(?:-|−|\\minus|\\frac\{-1\}\{2\}|-\\frac\{1\}\{2\})/);
 }
 
@@ -271,9 +272,9 @@ async function assertMatrixPresentation(page) {
       })
       .sort((left, right) => left.center - right.center)
   );
-  assert.equal(fractionBoxes.length, 4, "The default matrix must visibly render four fractions.");
-  const upperRowBottom = Math.max(...fractionBoxes.slice(0, 2).map((box) => box.bottom));
-  const lowerRowTop = Math.min(...fractionBoxes.slice(2).map((box) => box.top));
+  assert.equal(fractionBoxes.length, 2, "The default matrix must visibly render two fractions.");
+  const upperRowBottom = fractionBoxes[0].bottom;
+  const lowerRowTop = fractionBoxes[1].top;
   assert.ok(
     lowerRowTop - upperRowBottom >= 4,
     `Fraction rows must not touch or clip; measured ${lowerRowTop - upperRowBottom}px of clearance.`
@@ -367,6 +368,33 @@ async function assertArrowLineStyles(page) {
     assert.equal(await line.count(), 1, `${name} must have one visible component line.`);
     const dashArray = await line.getAttribute("stroke-dasharray");
     assert.ok(dashArray !== null && dashArray !== "" && dashArray !== "none", `${name} must be dashed.`);
+  }
+}
+
+async function assertArrowMarkerGeometry(page) {
+  for (const plotSelector of ["#v-plot", "#w-plot"]) {
+    const markers = page.locator(`${plotSelector} marker`);
+    assert.equal(
+      await markers.count(),
+      6,
+      `${plotSelector} must define one marker per color role.`
+    );
+    for (const marker of await markers.all()) {
+      assert.equal(await marker.getAttribute("viewBox"), "0 0 10 10");
+      assert.equal(await marker.getAttribute("refX"), "8.4");
+      assert.equal(await marker.getAttribute("refY"), "5");
+      assert.equal(await marker.getAttribute("markerWidth"), "11");
+      assert.equal(await marker.getAttribute("markerHeight"), "11");
+      assert.equal(
+        await marker.getAttribute("markerUnits"),
+        "userSpaceOnUse",
+        `${plotSelector} arrowheads must stay at a fixed viewport size instead of scaling with shaft width.`
+      );
+      assert.equal(await marker.getAttribute("orient"), "auto-start-reverse");
+      const arrowHead = marker.locator("path");
+      assert.equal(await arrowHead.getAttribute("d"), "M 0 0 L 10 5 L 0 10 z");
+      assert.equal(await arrowHead.getAttribute("stroke-linejoin"), "round");
+    }
   }
 }
 
@@ -642,7 +670,7 @@ async function assertMapAndVectorForms(page) {
   assert.equal(await page.locator("#map-12").inputValue(), "1/2");
   assert.notEqual(await plotSignature(page, "#w-plot"), initialWPlot);
 
-  await setMap(page, ["1", "2", "0", "1"]);
+  await setMap(page, ["2", "2", "0", "1"]);
   await assertDefaultRepresentation(page);
 
   await page.locator("#clear-vector-button").click();
@@ -669,10 +697,10 @@ async function assertMapAndVectorForms(page) {
   );
   assert.equal(await page.locator("#vector-x").getAttribute("aria-invalid"), "true");
 
-  await setVector(page, "2", "1");
+  await setVector(page, "1", "1");
 
   await assertClickSnapsWithoutHoverPreview(page);
-  await setVector(page, "2", "1");
+  await setVector(page, "1", "1");
 }
 
 async function assertClickSnapsWithoutHoverPreview(page) {
@@ -758,7 +786,7 @@ async function assertSourceBasisWorkflow(page) {
   const sourceImagesBefore = await arrowGeometrySignature(page, ["image-e1", "image-e2"]);
   const vectorImageBefore = await arrowGeometrySignature(page, ["image-v"]);
   const equationsBefore = await assertMatrixComponentEquations(page, [
-    "1/2,-1/2",
+    "1,-1",
     "3/2,-1/2"
   ]);
 
@@ -769,12 +797,12 @@ async function assertSourceBasisWorkflow(page) {
   assert.deepEqual(
     matrixColumns(updatedMatrix ?? ""),
     [
-      ["5/2", "-3/2"],
-      ["1", "0"]
+      ["7/2", "-5/2"],
+      ["1/2", "1/2"]
     ]
   );
   assert.notDeepEqual(
-    await assertMatrixComponentEquations(page, ["5/2,-3/2", "1,0"]),
+    await assertMatrixComponentEquations(page, ["7/2,-5/2", "1/2,1/2"]),
     equationsBefore,
     "The displayed B_W coordinate columns of f(e_i) must follow B_V updates."
   );
@@ -834,7 +862,7 @@ async function assertFitView(page) {
   assert.equal(
     await arrowEndpointIsInsidePlot(page, "#w-plot", "image-v"),
     false,
-    "f(v) = (9, 3) must remain outside the fixed W view before fitting."
+    "f(v) = (12, 3) must remain outside the fixed W view before fitting."
   );
 
   await page.locator("#fit-view-button").click();
@@ -852,7 +880,7 @@ async function assertFitView(page) {
     "Fit view must reveal the image-vector endpoint."
   );
 
-  await setVector(page, "2", "1");
+  await setVector(page, "1", "1");
   assert.equal(
     await page.locator("#v-plot").getAttribute("data-bounds"),
     fittedBounds,
@@ -1126,10 +1154,10 @@ async function setVector(page, x, y) {
 }
 
 async function restoreDefaults(page) {
-  await setMap(page, ["1", "2", "0", "1"]);
+  await setMap(page, ["2", "2", "0", "1"]);
   await setSourceBasis(page, ["1", "0", "0", "1"]);
   await setBasis(page, ["1", "1", "-1", "1"]);
-  await setVector(page, "2", "1");
+  await setVector(page, "1", "1");
   await page.locator("#fit-view-button").click();
   if ((await page.locator("html").getAttribute("data-theme")) !== "dark") {
     await page.locator("#theme-toggle").click();

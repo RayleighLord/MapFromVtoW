@@ -19,6 +19,8 @@ import {
 } from "./label-layout";
 
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+/** The SVG viewBox follows its CSS size, so user units keep this near 11 CSS px. */
+const ARROW_MARKER_SIZE = 11;
 
 export type PlotColorRole =
   | "green"
@@ -189,16 +191,18 @@ export abstract class RetainedSvgPlane {
     for (const role of Object.keys(ROLE_COLOR) as PlotColorRole[]) {
       const marker = svgElement("marker");
       marker.id = this.markerId(role);
-      marker.setAttribute("viewBox", "0 0 10 8");
-      marker.setAttribute("refX", "9");
-      marker.setAttribute("refY", "4");
-      marker.setAttribute("markerWidth", "8");
-      marker.setAttribute("markerHeight", "7");
+      marker.setAttribute("viewBox", "0 0 10 10");
+      marker.setAttribute("refX", "8.4");
+      marker.setAttribute("refY", "5");
+      marker.setAttribute("markerWidth", String(ARROW_MARKER_SIZE));
+      marker.setAttribute("markerHeight", String(ARROW_MARKER_SIZE));
       marker.setAttribute("orient", "auto-start-reverse");
-      marker.setAttribute("markerUnits", "strokeWidth");
+      marker.setAttribute("markerUnits", "userSpaceOnUse");
       const arrowHead = svgElement("path");
-      arrowHead.setAttribute("d", "M 0 0 L 10 4 L 0 8 z");
+      arrowHead.setAttribute("d", "M 0 0 L 10 5 L 0 10 z");
       arrowHead.setAttribute("fill", ROLE_COLOR[role]);
+      arrowHead.setAttribute("stroke", ROLE_COLOR[role]);
+      arrowHead.setAttribute("stroke-linejoin", "round");
       marker.append(arrowHead);
       definitions.append(marker);
     }

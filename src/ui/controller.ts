@@ -59,7 +59,7 @@ export interface VectorFields {
 export type AppControllerListener = (viewModel: ViewModel) => void;
 
 export const DEFAULT_MAP: LinearMap2D = matrix2(
-  [rational(1n), rational(2n)],
+  [rational(2n), rational(2n)],
   [rational(0n), rational(1n)],
 );
 
@@ -70,7 +70,7 @@ export const DEFAULT_BASIS_W: BasisW = Object.freeze({
   second: integerVector2(-1n, 1n),
 });
 
-export const DEFAULT_SELECTED_VECTOR: Vector2<Rational> = integerVector2(2n, 1n);
+export const DEFAULT_SELECTED_VECTOR: Vector2<Rational> = integerVector2(1n, 1n);
 
 function freezeState(state: AppState): AppState {
   return Object.freeze({

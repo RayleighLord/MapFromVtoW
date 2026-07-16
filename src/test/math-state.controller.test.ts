@@ -15,7 +15,7 @@ import {
 const r = rational;
 
 describe("AppController", () => {
-  it("starts with the default shear map, vector, and fixed shared bounds", () => {
+  it("starts with the default map, vector, and fixed shared bounds", () => {
     const controller = new AppController();
     const view = controller.getViewModel();
 
@@ -25,14 +25,17 @@ describe("AppController", () => {
       first: integerVector2(1n, 0n),
       second: integerVector2(0n, 1n),
     });
-    expect(view.state.selectedVector).toEqual(integerVector2(2n, 1n));
+    expect(view.state.selectedVector).toEqual(integerVector2(1n, 1n));
     expect(view.state.map).toEqual(
-      matrix2([r(1n), r(2n)], [r(0n), r(1n)]),
+      matrix2([r(2n), r(2n)], [r(0n), r(1n)]),
     );
-    expect(view.vector?.sourceCoordinates).toEqual(integerVector2(2n, 1n));
+    expect(view.vector?.sourceCoordinates).toEqual(integerVector2(1n, 1n));
     expect(view.vector?.image).toEqual(integerVector2(4n, 1n));
+    expect(view.vector?.imageCoordinates).toEqual(
+      vector2(r(5n, 2n), r(-3n, 2n)),
+    );
     expect(view.analysis.representation).toEqual(
-      matrix2([r(1n, 2n), r(3n, 2n)], [r(-1n, 2n), r(-1n, 2n)]),
+      matrix2([r(1n), r(3n, 2n)], [r(-1n), r(-1n, 2n)]),
     );
     expect(view.state.bounds).toEqual({
       xMin: -6,
@@ -114,11 +117,9 @@ describe("AppController", () => {
     expect(after.state.map).toEqual(before.state.map);
     expect(after.vector?.source).toEqual(before.vector?.source);
     expect(after.vector?.image).toEqual(before.vector?.image);
-    expect(after.analysis.imageE1).toEqual(integerVector2(3n, 1n));
-    expect(after.analysis.imageE2).toEqual(integerVector2(3n, 2n));
-    expect(after.vector?.sourceCoordinates).toEqual(
-      vector2(r(5n, 3n), r(-1n, 3n)),
-    );
+    expect(after.analysis.imageE1).toEqual(integerVector2(4n, 1n));
+    expect(after.analysis.imageE2).toEqual(integerVector2(2n, 2n));
+    expect(after.vector?.sourceCoordinates).toEqual(integerVector2(1n, 0n));
     expect(after.analysis.representation).not.toEqual(
       before.analysis.representation,
     );
@@ -163,12 +164,12 @@ describe("AppController", () => {
 
     expect(singular.analysis.inverseSourceBasis).toBeNull();
     expect(singular.analysis.representation).toBeNull();
-    expect(singular.vector?.source).toEqual(integerVector2(2n, 1n));
+    expect(singular.vector?.source).toEqual(integerVector2(1n, 1n));
     expect(singular.vector?.sourceCoordinates).toBeNull();
     expect(singular.vector?.image).toEqual(integerVector2(4n, 1n));
     expect(singular.vector?.imageCoordinates).not.toBeNull();
-    expect(singular.analysis.imageE1).toEqual(integerVector2(5n, 2n));
-    expect(singular.analysis.imageE2).toEqual(integerVector2(10n, 4n));
+    expect(singular.analysis.imageE1).toEqual(integerVector2(6n, 2n));
+    expect(singular.analysis.imageE2).toEqual(integerVector2(12n, 4n));
     expect(singular.notices[0]?.text).toContain("Not a basis in V");
 
     // Output decomposition focus depends only on B_W and remains usable.
