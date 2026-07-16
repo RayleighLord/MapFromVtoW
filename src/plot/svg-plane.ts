@@ -333,7 +333,7 @@ export abstract class RetainedSvgPlane {
         setNumberAttribute(line, "y2", clippedEnd.y);
         line.setAttribute("stroke", color);
         line.setAttribute("stroke-width", options.dashed === true ? "3.2" : "4.1");
-        line.setAttribute("stroke-linecap", "round");
+        line.setAttribute("stroke-linecap", "butt");
         line.setAttribute("vector-effect", "non-scaling-stroke");
         line.setAttribute("marker-end", `url(#${this.markerId(role)})`);
         if (options.dashed === true) {

@@ -373,6 +373,19 @@ async function assertArrowLineStyles(page) {
 
 async function assertArrowMarkerGeometry(page) {
   for (const plotSelector of ["#v-plot", "#w-plot"]) {
+    const arrowLines = page.locator(`${plotSelector} .plot-arrow-line`);
+    assert.ok(
+      (await arrowLines.count()) > 0,
+      `${plotSelector} must contain visible arrow shafts.`
+    );
+    for (const arrowLine of await arrowLines.all()) {
+      assert.equal(
+        await arrowLine.getAttribute("stroke-linecap"),
+        "butt",
+        `${plotSelector} arrow shafts must stop cleanly beneath their arrowheads.`
+      );
+    }
+
     const markers = page.locator(`${plotSelector} marker`);
     assert.equal(
       await markers.count(),
